@@ -4,9 +4,18 @@
 
 A parcel-level analysis comparing new single-family construction across El Paso, Texas's four highest-growth suburban tracts against a second dataset covering the city's five historic central zip codes — looking at how much got built, how big, how dense, how it's priced, and how the new suburbs actually differ from the old core.
 
+---
+
 ## How it was made
 
-**Growth-area data:** Parcel-level property records for four high-growth El Paso tracts (79911, 79934, 79936, 79938), from [RentCast.io](https://www.rentcast.io). 17,113 single-family homes, built in one of two five-year windows this analysis is scoped to: 2010–2014 and 2020–2025.
+**Growth-area data:** Parcel-level property records for four high-growth El Paso tracts, from [RentCast.io](https://www.rentcast.io):
+
+- 79911 — Northwest: Upper Valley / Cimarron
+- 79934 — Northeast: Campo Del Sol / Sandstone Ranch / Mesquite Hills
+- 79936 — East-Central: Pebble Hills / Vista Real
+- 79938 — Far East: Tierra del Este
+
+17,113 single-family homes, built in one of two five-year windows this analysis is scoped to: 2010–2014 and 2020–2025.
 
 **Central-core data:** Parcel records for five historic central zips (79901, 79902, 79903, 79905, 79930), from [Regrid.com](https://www.regrid.com). 817 parcels total, spanning a continuous build/renovation year from 2010–2024. 670 (82%) are single-family (Regrid state use code `A1`); the remaining 147 (18%) are small multifamily structures — duplex through fourplex (`B1`–`B4`).
 
@@ -14,18 +23,19 @@ A parcel-level analysis comparing new single-family construction across El Paso,
 - Parsed nested/JSON-like fields — `taxAssessments` (growth) for the latest county-assessed value; `features` (growth) for garage, fireplace, cooling, room count, and garage spaces.
 - Normalized inconsistent boolean fields (`ownerOccupied` had mixed `True`/`False`/`"1.0"`/`"0.0"` string representations).
 - Computed a floor-area ratio (finished/building sqft ÷ lot sqft) as a density proxy for both sources.
-- Built three parallel aggregates for the central core — single-family only, multifamily only, and both combined — by zip and by year, so the front-end toggle has real precomputed numbers to switch between rather than recalculating on the fly.
+- Built three parallel aggregates for the central core — single-family only, multifamily only, and both combined — by zip and by year, feeding a live toggle on the dashboard.
 - Sale price was evaluated and excluded from both datasets — it's recorded for under 2% of growth-area parcels and only 7 of 670 central-core single-family parcels (the rest are `$0` placeholders for "no qualifying sale on file"). County-assessed value is used instead throughout.
+- A small number of growth-area parcels (81, under 0.5% of the file) carry coordinates well outside El Paso County — clear geocoding errors. These are excluded from the map visualization only; they remain part of every count and calculation elsewhere in the report.
 
-**Front end:** A single self-contained HTML file — no build step, no server, and now no external script dependency at all. Chart.js is embedded directly in the file rather than loaded from a CDN, so it can't silently fail to load. The hero map is a hand-built canvas scatter of every growth-area parcel by real latitude/longitude, with period and zip filters and hover tooltips. All data is embedded as JSON in the page, so the whole thing genuinely works offline once downloaded (only the Google Fonts stylesheet is external, and the page falls back to system fonts gracefully if that's unreachable).
+**Front end:** A single self-contained HTML file — no build step, no server, no external script dependency. Chart.js is embedded directly in the file rather than loaded from a CDN. The hero map is a hand-built canvas scatter of every growth-area parcel by real latitude/longitude, with period and zip filters and hover tooltips. All data is embedded as JSON in the page, so the whole thing works offline once downloaded (only the Google Fonts stylesheet is external, and the page falls back to system fonts gracefully if that's unreachable).
 
-**Design:** Same desert-survey/parcel-ledger aesthetic — rust (2010–2014) vs. turquoise (2020–2025) for growth-area period comparisons, gold vs. plum for growth-suburbs-vs-central-core macro comparisons.
+**Design:** A desert-survey/parcel-ledger aesthetic — rust (2010–2014) vs. turquoise (2020–2025) for growth-area period comparisons, gold vs. plum for growth-suburbs-vs-central-core macro comparisons.
 
 ---
 
 ## Key findings
 
-### 1. Growth-area construction fell 32% overall — but the Far East never actually collapsed
+### 1. Growth-area construction fell 32% overall — but the Far East is still the engine
 Total new single-family homes across the four growth tracts fell from 10,172 (2010–2014) to 6,941 (2020–2025) — a 31.8% decline.
 
 | Tract | Name | 2010–2014 | 2020–2025 | Change |
@@ -35,7 +45,7 @@ Total new single-family homes across the four growth tracts fell from 10,172 (20
 | 79911 | Northwest: Upper Valley / Cimarron | 1,050 | 1,041 | ‑0.9% |
 | 79936 | East-Central: Pebble Hills / Vista Real | 439 | 146 | ‑66.7% |
 
-79938 alone still accounts for roughly two-thirds of all new construction in both periods (68.8% → 65.7%).
+79938 alone still accounts for roughly two-thirds of all new construction in both periods (68.8% → 65.7%), building steadily across every year of the 2020s window rather than in a single burst.
 
 ### 2. Homes are bigger, denser, with fewer fireplaces
 - Average square footage: 1,807 → 2,023 sqft (+12%); average lot size barely moved (6,974 → 6,965 sqft) — so density (floor-area ratio) rose from 0.301 to 0.323.
@@ -68,7 +78,7 @@ Comparing the four growth tracts (17,113 homes) against the five central-core zi
 - `el_paso_housing_analysis.html` — the full interactive dashboard (deployed to the GitHub Pages link above)
 - `el_paso_housing_data.json` — the standalone processed/aggregated dataset (growth + central, with all three central-core filter views), if you want the numbers without the front end
 
-## Caveats worth repeating
+## Caveats worth keeping in mind
 
 - Growth-area analysis is scoped to two five-year windows (2010–2014, 2020–2025), by design. Central-core data is a continuous 2010–2024 span.
 - "Value" = latest county tax assessment on file for both sources, not a sale price or market estimate.
